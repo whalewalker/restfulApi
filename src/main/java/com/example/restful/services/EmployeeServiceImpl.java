@@ -2,10 +2,13 @@ package com.example.restful.services;
 
 import com.example.restful.data.model.Employee;
 import com.example.restful.data.repository.EmployeeRepository;
+import com.example.restful.services.util.EmployeeMapper;
 import com.example.restful.web.dto.EmployeeDto;
 import com.example.restful.web.exceptions.EmployeeDoesNotExistException;
 import com.example.restful.web.exceptions.EmployeeNullPointerException;
 import com.example.restful.web.exceptions.NullIdException;
+import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.factory.Mappers;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Slf4j
 public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
@@ -20,6 +24,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     ModelMapper modelMapper;
+
+    EmployeeMapper employeeMapper;
+
+    EmployeeServiceImpl(){
+        employeeMapper = Mappers.getMapper(EmployeeMapper.class);
+    }
 
     @Override
     public Employee save(EmployeeDto employee) throws EmployeeNullPointerException {
@@ -51,10 +61,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee updateEmployee(Long id, EmployeeDto updatedEmployee) throws NullIdException, EmployeeDoesNotExistException {
-        Employee employeeToUpdate = findById(id);
-        employeeToUpdate.setFirstName(updatedEmployee.getFirstName());
-        employeeToUpdate.setLastName(employeeToUpdate.getLastName());
-        employeeToUpdate.setRole(employeeToUpdate.getRole());
-        return employeeRepository.save(employeeToUpdate);
+        Employee employee = findById(id);
+        employeeMapper.updateEmployeeFromDto(updatedEmployee, employee);
+
+        log.info("Employee after mapping -->{}", employee);
+
+        return employeeRepository.save(employee);
     }
 }

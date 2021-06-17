@@ -12,14 +12,19 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Mockito.*;
 
+@SpringBootTest
+@Sql(scripts = "classpath:db/insert.sql")
 class EmployeeServiceImplTest {
 
     @Mock
@@ -27,6 +32,10 @@ class EmployeeServiceImplTest {
 
     @InjectMocks
     EmployeeServiceImpl employeeService;
+
+
+    @Autowired
+     EmployeeService employeeServiceImpl;
 
     Employee employee;
 
@@ -76,4 +85,21 @@ class EmployeeServiceImplTest {
 
         verify(mockRepository, times(1)).deleteById(id);
     }
+
+    @Test
+    void whenUpdateEmployeeIsCalledThenUpdateNotNullValues() throws NullIdException, EmployeeDoesNotExistException {
+        Employee existingEmployee = employeeServiceImpl.findById(12L);
+        assertThat(existingEmployee.getFirstName()).isEqualTo("robin");
+        assertThat(existingEmployee.getLastName()).isEqualTo("dob");
+        assertThat(existingEmployee.getRole()).isEqualTo("HR");
+
+        EmployeeDto employeeDto = new EmployeeDto();
+        employeeDto.setRole("Accountant");
+
+        Employee employee = employeeServiceImpl.updateEmployee(12L, employeeDto);
+        assertThat(employee.getFirstName()).isEqualTo("robin");
+        assertThat(employee.getLastName()).isEqualTo("dob");
+        assertThat(employee.getRole()).isEqualTo("Accountant");
+    }
+
 }
